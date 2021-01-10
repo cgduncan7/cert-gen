@@ -1,0 +1,15 @@
+[package]
+name = "cert-gen"
+version = "0.1.0"
+authors = ["cgduncan7 <cgduncan7@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+azul-text-layout = "0.0.4"
+csv = "1.1"
+printpdf = "0.3.4"
+serde = "1.0.118"
+serde_derive = "1.0.118"
+toml = "0.4.2"
