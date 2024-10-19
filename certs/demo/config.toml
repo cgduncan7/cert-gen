@@ -1,0 +1,9 @@
+title = 'Demo'
+
+fonts = [
+  {name = 'Emoji', file = 'OpenSansEmoji.otf'},
+]
+
+texts = [
+  { name = 'normal', x = 0.5, y = 0.5, font = 'Regular', size = 14 },
+]

@@ -30,7 +30,7 @@ fn main() {
     let cert_config: Config;
     match certificate_config::read_config(cert_dir) {
         Ok(config) => cert_config = config,
-        Err(why) => panic!(why),
+        Err(why) => panic!("{}", why),
     };
 
     match std::fs::remove_dir_all("./dist/") {
@@ -39,7 +39,7 @@ fn main() {
     };
     match std::fs::create_dir("./dist/") {
         Ok(_)       => (),
-        Err(why)    =>  panic!(why),
+        Err(why)    =>  panic!("{}", why),
     };
 
     // create pdfs
@@ -49,23 +49,27 @@ fn main() {
                 // preparing PDF template
                 let (doc, page, layer) =
                     PdfDocument::new(&cert_config.title, Mm(DOC_WIDTH), Mm(DOC_HEIGHT), "layer1");
+
                 let base_layer = doc.get_page(page).get_layer(layer);
 
                 // load base image
                 let mut base_img_file = File::open(format!("{}/base.png", cert_dir)).unwrap();
                 let base_img =
-                    Image::try_from(image::png::PngDecoder::new(&mut base_img_file).unwrap())
+                    Image::try_from(image_crate::codecs::png::PngDecoder::new(&mut base_img_file).unwrap())
                         .unwrap();
 
                 // add base image to base layer
+                let image_transform: ImageTransform = ImageTransform {
+                    translate_x: Some(Mm(0.0)),
+                    translate_y: Some(Mm(0.0)),
+                    rotate: Some(ImageRotation::default()),
+                    scale_x: Some(1.0),
+                    scale_y: Some(1.0),
+                    dpi: None
+                };
                 base_img.add_to_layer(
                     base_layer.clone(),
-                    Some(Mm(0.0)),
-                    Some(Mm(0.0)),
-                    Some(0.0),
-                    Some(1.0),
-                    Some(1.0),
-                    Some(144.0),
+                    image_transform,
                 );
 
                 // loading fonts
@@ -78,9 +82,11 @@ fn main() {
                     let file = File::open(&doc_font_filename);
                     doc_fonts.push((
                         &font.name,
-                        doc_font_filename,
-                        doc.add_external_font(file.unwrap())
-                            .unwrap(),
+                        doc_font_filename.to_owned(),
+                        match doc.add_external_font(file.unwrap()) {
+                            Ok(v) => v,
+                            Err(e) => panic!("{}: {}", doc_font_filename, e.to_string())
+                        }
                     ));
                 }
                 let text_layer = doc.get_page(page).add_layer("texts");
@@ -135,9 +141,9 @@ fn main() {
                 filename.push_str(&cert_config.title);
                 filename.push('-');
                 filename.push_str(
-                    match datum.get("Naam") {
+                    match datum.get("id") {
                         Some(n) => n,
-                        None    => panic!("no name!"),
+                        None    => panic!("no id!"),
                     }
                 );
                 filename.push_str(".pdf");
@@ -145,7 +151,7 @@ fn main() {
                     .unwrap();
             }
         }
-        Err(why) => panic!(why),
+        Err(why) => panic!("{}", why),
     }
 }
 
@@ -162,9 +168,11 @@ fn add_text(
 
     let length = calculate_text_length(font_filename, text, font_size.to_owned().into());
 
+    println!("{}", text);
+
     layer.set_font(font, font_size.to_owned().into());
     layer.set_text_cursor(Mm(DOC_WIDTH * x) - (length / 2.), Mm(DOC_HEIGHT * y));
-    layer.set_text_rendering_mode(TextRenderingMode::FillStroke);
+    layer.set_text_rendering_mode(TextRenderingMode::Fill);
     layer.write_text(text, font);
 
     layer.end_text_section();
@@ -177,7 +185,7 @@ fn calculate_text_length(font_filename: &str, text: &str, font_size: f32) -> Mm 
     let mut reader = BufReader::new(font_file);
     match reader.read_to_end(&mut buf) {
         Ok(_) => (),
-        Err(why) => panic!(why),
+        Err(why) => panic!("{}", why),
     }
     let font_metrics = get_font_metrics_freetype(&buf, 0);
     let words = split_text_into_words(text);

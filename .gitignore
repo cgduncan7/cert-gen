@@ -2,3 +2,10 @@
 
 assets/
 dist/
+
+.DS_Store
+
+data.csv
+
+certs/*
+!certs/demo
