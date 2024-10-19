@@ -5,5 +5,5 @@ fonts = [
 ]
 
 texts = [
-  { name = 'normal', x = 0.5, y = 0.5, font = 'Regular', size = 14 },
+  { name = 'normal', x = 0.5, y = 0.5, font = 'Emoji', size = 14 },
 ]
